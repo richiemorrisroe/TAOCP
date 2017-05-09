@@ -659,7 +659,7 @@ Blanks  BYTE     "   ",0
         LDA      t,NewLn
         TRAP     0,Fputs,StdOut
         CMP      t,mm,2*(L/10-1)
-        BNZ    t,3B
+        PBNZ    t,3B
         TRAP    0,Halt,0
         
 
@@ -773,7 +773,8 @@ Main    GETA    t,9F
 9) L IS 600 (or any N that fits in a byte)
 10) I really don't want to do this
 
-14) 
+14)
+ 
 #+BEGIN_SRC mmix :tangle primes_float.mms
 
 L       IS      1025
@@ -785,7 +786,7 @@ jj      GREG    0
 kk      GREG    0
 pk      GREG    0
 mm      IS      kk
-
+fq      GREG    0
         LOC     Data_Segment
 PRIME1  WYDE    2
         LOC     PRIME1+2*L
@@ -804,7 +805,8 @@ Main    SET      n,3
 6H      LDWU     pk,ptop,kk
         FSQRT     q,n
         FREM     r,n,pk
-        BZ       r,4B
+        FEQL     r,r,fq
+        BNZ       r,4B
 7H      CMP      t,q,pk
         PBNP      t,2B
 8H      INCL     kk,2
@@ -841,8 +843,182 @@ Blanks  BYTE     "   ",0
         
 
 #+END_SRC
+
+#+BEGIN_SRC mmix :tangle primes_float_knuth.mms
+L       IS      1025
+t       IS      $255
+n       GREG    0
+q       GREG    0
+r       GREG    0
+jj      GREG    0
+kk      GREG    0
+pk      GREG    0
+mm      IS      kk
+
+        LOC     Data_Segment
+PRIME1  WYDE    2
+        LOC     PRIME1+2*L
+ptop    GREG    @
+j0      GREG    PRIME1+2-@
+BUF     OCTA    0
+
+        LOC     #100
+Main    SET      n,3
+        SET      jj,j0
+2H      STWU     n,ptop,jj
+        INCL     jj,2
+3H      BZ       jj,2F
+4H      INCL     n,2
+5H      SET      kk,j0
+fn      GREG     0
+sqrtn   GREG     0
+        FLOT     fn,n
+        FSQRT    sqrtn,fn
+6H      LDWU     pk,ptop,kk
+        FLOT     t,pk
+        FREM     r,fn,t
+        BZ       r,4B
+7H      FCMP     t,sqrtn,t        
+        PBNP      t,2B
+8H      INCL     kk,2
+        JMP      6B
+        GREG     @
+Title   BYTE     "First Five Hundred Primes"
+NewLn   BYTE     #a,0
+Blanks  BYTE     "   ",0
+2H      LDA      t,Title
+        TRAP     0,Fputs,StdOut
+        NEG      mm,2
+3H      ADD      mm,mm,j0
+        LDA      t,Blanks
+        TRAP     0,Fputs,StdOut
+2H      LDWU     pk,ptop,mm
+0H      GREG     #2030303030000000
+        STOU     0B,BUF
+        LDA      t,BUF+4
+1H      DIV      pk,pk,10
+        GET      r,rR
+        INCL     r,'0'
+        STBU     r,t,0
+        SUB      t,t,1
+        PBNZ     pk,1B
+        LDA      t,BUF
+        TRAP     0,Fputs,StdOut
+        INCL     mm,2*L/10
+        PBN      mm,2B
+        LDA      t,NewLn
+        TRAP     0,Fputs,StdOut
+        CMP      t,mm,2*(L/10-1)
+        PBNZ    t,3B
+        TRAP    0,Halt,0
+        
+
+#+END_SRC
 The FP version does more compute operations (which makes sense, as I suspect FREM has to dedo the division that was already done above). I wonder if that div can be removed. 
 Attempting to change the q to $\ sqrt(n)$ results in an infinite loop. However, running C-c (C-c in Emacs) gets us into the debugger, which seems to be pretty sweet. I don't understand what's going on to cause the inf-loop though (yet).
+***** Second Set
+****** Exercise 18: Saddle points
+- Assume a 9*8 matrix of 1 byte elements
+- Find a saddle-point if one exists, returning the location
+- Return zero if none
+- Saddle point: greatest value in col, smallest in row. 
+#+BEGIN_SRC mmix :tangle saddle_point.mms
+row      GREG   0
+col      GREG   0
+cur      GREG   0
+i        GREG   0
+j        GREG   0
+Max      LDB    cur,A,
+#+END_SRC
+
+#+BEGIN_SRC python saddle_point.py
+def saddle_point(matrix):
+    for row, col in matrix:
+        
+#+END_SRC
+
+#+BEGIN_SRC R :session :results none
+saddle_point <- function(matrix) {
+    minrow <- apply(matrix, 1, min)
+    maxcol <- apply(matrix, 2, max)
+    res <- ifelse(minrow==maxcol, 1, 0)
+    sum(res)
+    if(sum(res)==0) {
+        return(0)
+    }
+    else {
+        return(which(minrow==maxcol))
+    }
+}
+#+END_SRC
+****** Exercise 21: Farey Sequence
+#+BEGIN_SRC mmix farey_seq.mms
+x0       GREG    0
+y0       GREG    0
+x1       GREG    0
+y1       GREG    n
+n        GREG    0
+temp1    GREG    0
+temp2    GREG    0
+Y        WYDE    2
+         LOC     Y+2*n
+X        WYDE    2
+         LOC     X+2*n
+offset   GREG    0
+         STBU    x0,n,0
+         INCL    offset,1,0
+         INCL    y0,1,0
+         STBU    y0,n,offset
+         INCL    offset,1,0
+         SET     temp1,X,2*(n-1)
+         SET     temp2,X,2*(n-2)
+         SET     x,
+        
+#+END_SRC
+
+I need more practice writing MMIX. 
+Let's do something I've done many times, fibonnacci
+
+#+BEGIN_SRC mmix :tangle fib.mms
+,*first, allocate space for the output
+N       IS       10
+ind     GREG       0        
+first   GREG       0
+second  GREG       1
+fib     GREG       0
+n       GREG       0
+        LOC      Data_Segment
+res     WYDE    
+        LOC      res+4*N
+done    GREG     @      
+        LOC      #100  
+Main    SET      fib,0
+        SET      n,100
+1H      STT      first,res,ind
+        INCL     ind,1
+        STT      second,res,ind        
+        ADD      fib,first,second
+
+        SET      first,second
+        SET      second,fib
+        SUB      n,n,1
+        PBNZ      n,1B
+        LDA      $255,fib
+        TRAP     0,Fputs,StdOut
+        TRAP     0,Halt,0
+#+END_SRC
+
+ Excercises 1.31
+
+#+BEGIN_LaTeX
+25x = 16x + 9x + x
+25x = 32x - 9x
+#+END_LaTeX
+So, we can express 25x as SR r,x,4; 8ADDU r,x,x for a cost of 2v, as opposed to 10v for multiplication. 
+
+
+
+
 ***** Exercises, Set Two.
 
 I kinda want to do some of these in R first.
@@ -1112,10 +1288,7 @@ Hmmm, I can't get this to work. The X and Y variables have not been defined. We 
 ***** TODO Finish section on permutations
 - I really don't understand all of this.
 - I need to take some notes on this stuff to solidify it in my mind
-- I do feel like I'm getting a little better at MMIX though, I can almost read the damn stuff know. 
-
-
-
+- I do feel like I'm getting a little better at MMIX though, I can almost read the damn stuff know.
 
 
 * 4B, Mathematical Preliminaries, Redux
