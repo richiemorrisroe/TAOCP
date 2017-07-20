@@ -1003,7 +1003,7 @@ Main    SET      fib,0
         SET      second,fib
         SUB      n,n,1
         PBNZ      n,1B
-FIB     BYTE      fib,0        
+FIB     OCTA      fib,0        
         LDA      $255,FIB
         TRAP     0,Fputs,StdOut
         TRAP     0,Halt,0
