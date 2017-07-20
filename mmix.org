@@ -1003,7 +1003,8 @@ Main    SET      fib,0
         SET      second,fib
         SUB      n,n,1
         PBNZ      n,1B
-        LDA      $255,fib
+FIB     BYTE      fib,0        
+        LDA      $255,FIB
         TRAP     0,Fputs,StdOut
         TRAP     0,Halt,0
 #+END_SRC
@@ -1288,7 +1289,7 @@ Hmmm, I can't get this to work. The X and Y variables have not been defined. We 
 ***** TODO Finish section on permutations
 - I really don't understand all of this.
 - I need to take some notes on this stuff to solidify it in my mind
-- I do feel like I'm getting a little better at MMIX though, I can almost read the damn stuff know.
+- I do feel like I'm getting a little better at MMIX though, I can almost read the damn stuff now.
 
 
 * 4B, Mathematical Preliminaries, Redux
