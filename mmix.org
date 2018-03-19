@@ -1,7 +1,7 @@
 #+STARTUP: latexpreview
 * Volume 1
 ** Mathematical Preliminaries
-- Need to copy notes from notebook into this document. 
+- Need to copy notes from notebook into this document.
 #+BEGIN_SRC R :session
 mygamma <- function(z, n) {
     n <- floor(z)
@@ -10,7 +10,7 @@ mygamma <- function(z, n) {
         res <- res * (1 + 1/n)^z/(1 + z/n)
     }
     res <- res/z
-    
+
 }
 #+END_SRC
 
@@ -33,13 +33,13 @@ We can express 64bit words more comfortably in hexadecimal as follows:
 | 0 = 0000 | 4=0100 | 8=1000 | c=1100 |
 | 1 = 0001 | 5=0101 | 9=1001 | d=1101 |
 | 2 = 0010 | 6=0110 | a=1010 | e=1110 |
-| 3 = 0011 | 7=0111 | b=1011 | f=1111 | 
+| 3 = 0011 | 7=0111 | b=1011 | f=1111 |
 
-This table makes more sense if read downwards from the left. 
+This table makes more sense if read downwards from the left.
 
 A convention used with hexadecimals is to prepend # to the number, as in #9e3779b97f4a7c16.
 
-Uppercase ABCDEF are often used, in order to look better. 
+Uppercase ABCDEF are often used, in order to look better.
 
 **** Prefixes
 #+BEGIN_SRC mmix
@@ -50,7 +50,7 @@ PREFIX Bar: ;prefix now Foo:Bar
 ADD :x, y, :z ; ADD :x, Foo:Bar:y, :z
 PREFIX : ;prefix reverts to :
 #+END_SRC
-- A sequence of 8 bits is often called a byte. English can be represented in one byte using the ASCII encoding. 
+- A sequence of 8 bits is often called a byte. English can be represented in one byte using the ASCII encoding.
 - ASCII is a seven bit code with #00-#1f as control characters, #20-#7e as printing characters, and a delete character #7f
 - It was extended in the 70's to include European languages, called Latin-1 or ISO 8859-1.
 - A 16 bit code that supports all languages (Unicode) became popular in the 1990's.
@@ -66,7 +66,7 @@ PREFIX : ;prefix reverts to :
 | unsigned tetra | 0..4,294,967,295 |
 | unsigned octa  | 0..18,446,744,073,709,551,615 |
 
-- integers are often represented in *two's complement* notation. 
+- integers are often represented in *two's complement* notation.
 - In this notation:
   - the leftmost bit represents the sign
   - -1 = #ff (bytes) -2^1
@@ -98,7 +98,7 @@ PREFIX : ;prefix reverts to :
 - Special registers called called rA, rB,....rZ, rBB, rTT, rWW, rXX, rYY, rZZ
 **** Instructions
 
-- Command/instruction is a terabyte with components OP, X, Y, Z
+- Command/instruction is a tetrabyte with components OP, X, Y, Z
 - OP is operation code/opcode which describes the action
 - X, Y, Z are the operands
 - Operand bytes are always unsigned
@@ -124,10 +124,10 @@ PREFIX : ;prefix reverts to :
         LDO $X, $Y, $Z          ;
 #+END_SRC
 
-These load bytes, wydes, tetras or octas. 
+These load bytes, wydes, tetras or octas.
 They load the sum of the unsigned integers represented by $Y + $Z, ignoring carry that occurs from the left
 
-Next, we have the unsigned register transfer instructions. 
+Next, we have the unsigned register transfer instructions.
 
 #+BEGIN_SRC mmix
         LDBU $1, $2, $3                 ;
@@ -138,19 +138,29 @@ Next, we have the unsigned register transfer instructions.
 
 #+BEGIN_SRC mmix
         LDHT $X, $Y, $Z                 ;
-        
+
 #+END_SRC
 
-Load the tetrabyte M_4[A] into the left half of $X, set the right half to zero. 
-Assuming A=1005, this will result in #89abcdef00000000, taking the highest tetra from the original word, and putting this in place of the lower tetra, 
-padding right with zeros. 
+#+BEGIN_SRC python :tangle :file hex.py
+def int_to_hex(int):
+    res = hex(int)
+    return res
+#+END_SRC
 
+
+
+***** TODO Figure out what's going on here
+Load the tetrabyte M_4[A] into the left half of $X, set the right half to zero.
+Assuming A=1005, this will result in #89abcdef00000000, taking the highest tetra from the original word, and putting this in place of the lower tetra,
+padding right with zeros.
+So, running the above function for 1005 gives me 0x3ed
 #+BEGIN_SRC mmix
-        LDA $X, $Y, $Z                  ;
-        
+        LDA $X, $Y, $Z
+
 #+END_SRC
 
-Load a memory address into a register. Essentially the same as the ADDU instructions later. 
+Load a memory address into a register. Essentially the same as the ADDU instructions later.
+
 
 #+BEGIN_SRC mmix
         STB $X, $Y, $Z                  ;
@@ -159,8 +169,8 @@ Load a memory address into a register. Essentially the same as the ADDU instruct
         STO $X, $Y, $Z                  ;
 #+END_SRC
 
-Store a byte, wyde, tetra or octa from a register to memory. 
-- Overflow is possible if the signed number in the register lies outside the range of the memory field. 
+Store a byte, wyde, tetra or octa from a register to memory.
+- Overflow is possible if the signed number in the register lies outside the range of the memory field.
 
 
 #+BEGIN_SRC mmix
@@ -182,7 +192,7 @@ Store a byte, wyde, tetra or octa from a register to memory.
 #+END_SRC
 
 
-Division checks for a zero divisor, and puts the remainder into a special register, rR. This can be retrived with a GET $X, rR. 
+Division checks for a zero divisor, and puts the remainder into a special register, rR. This can be retrived with a GET $X, rR.
 
 
 
@@ -193,8 +203,8 @@ Division checks for a zero divisor, and puts the remainder into a special regist
         DIVU $X, $Y, $Z                  ;
 #+END_SRC
 
-These opcodes perform unisgned addition, which never overflows. 
-The MULU operation forms a full 16-byte product, and the upper half goes into the himult register, rH. 
+These opcodes perform unisgned addition, which never overflows.
+The MULU operation forms a full 16-byte product, and the upper half goes into the himult register, rH.
 
 #+BEGIN_SRC mmix
         2ADDU $X, $Y, $Z                ;
@@ -203,16 +213,16 @@ The MULU operation forms a full 16-byte product, and the upper half goes into th
         8ADDU $X, $Y, $Z                ;
 #+END_SRC
 
-These instructions multiply $Y by 2/4/6/8 and add $Z. 
-2ADDU, $X, $Y, $Y is faster than multiplying by 3 if overflow is not a concern. 
+These instructions multiply $Y by 2/4/6/8 and add $Z.
+2ADDU, $X, $Y, $Y is faster than multiplying by 3 if overflow is not a concern.
 
 #+BEGIN_SRC mmix
         NEG $X, $Y, $Z          ;
         NEGU $X, $Y, $Z         ;
-        
+
 #+END_SRC
 
-Negate a signed or unsigned number. 
+Negate a signed or unsigned number.
 
 #+BEGIN_SRC mmix
 SL $X, $Y, $Z ;shift left x= y*2u^($Z)
@@ -220,7 +230,7 @@ SLU $X, $Y, $Z; shift left unsigned u(y)x2u^$Z
 SR $X, $Y, $Z; shift right x=y/2u^$Z
 SRU $X, $Y, $Z;shift right unsigned
 #+END_SRC
-SL and SR are much faster than MUL or DIV for powers of 2. 
+SL and SR are much faster than MUL or DIV for powers of 2.
 y << z shifting a binary y to the left by z bits
 y >> z shifting to the right by z bits
 
@@ -231,8 +241,8 @@ CMPU $X, $Y, $Z;compare unsigned
 #+END_SRC
 
 **** Conditional Instructions
-- DO the conditional instructions map to the -1, 0, 1 convention for comparisons?
-- Answer: yes they do, as per page 14 of Fasicle 1. 
+- Do the conditional instructions map to the -1, 0, 1 convention for comparisons?
+- Answer: yes they do, as per page 14 of Fasicle 1.
 
 #+BEGIN_SRC mmix
 CSN $X, $Y, $Z ;conditional set if negative
@@ -257,7 +267,7 @@ If $Y is true, $Z is copied to $X
 - A register is odd if its trailing digit is 1.
 **** Bitwise Operations
 
-These are performed on the entire 64bit word (octabyte), independently to each bit. 
+These are performed on the entire 64bit word (octabyte), independently to each bit.
 
 #+BEGIN_SRC mmix
 AND $X, $Y, $Z ;bitwise AND
@@ -271,20 +281,20 @@ NXOR $X, $Y, $Z; bitwise not-exclusive-or
 #+END_SRC
 
 #+BEGIN_SRC latex
-$v\bar $ is the complement of the vector, obtained by changing 0 to 1 and 1 to 0. 
+$v\bar $ is the complement of the vector, obtained by changing 0 to 1 and 1 to 0.
 #+END_SRC
 
-Binary rules exist for or, and and exclusive OR. 
+Binary rules exist for or, and and exclusive OR.
 - ANDing is the same as multiplying/taking the minimum
 - ORing is the same as taking the maximum
-- ExOR is the same as adding mod 2. 
+- ExOR is the same as adding mod 2.
 
 #+BEGIN_SRC mmix
 MUX $X, $Y, $Z ;bitwise multiplex - uses special register rM
 SADD $X, $Y, $Z ;count number of bit positions where $Y has a 1 while $Z has an 0
 #+END_SRC
 
-Additionally, we can treat an octabyte as a vector of 8 individual bytes, or 4 wydes or two tetras. 
+Additionally, we can treat an octabyte as a vector of 8 individual bytes, or 4 wydes or two tetras.
 
 #+BEGIN_SRC mmix
 BDIF $X, $Y, $Z ;byte difference
@@ -297,7 +307,7 @@ ODIF $X, $Y, $Z ;octa difference
 - Apparently these ops are important in text processing
 - We can also treat an octabyte as an 8*8 matrix, whrere the rows from top to bottom are the bytes of x from left to right
 - We can transpose this matrix
-- We can define AND and OR as matrix operators. 
+- We can define AND and OR as matrix operators.
 
 #+BEGIN_SRC mmix
 MOR $X, $Y, $Z ; multiple OR
@@ -329,14 +339,14 @@ LDSF $X, $Y, $Z;load short float
 STSF $X, $Y, $Z;store short float
 #+END_SRC
 
-- Rounding modes are available and used by default. 
+- Rounding modes are available and used by default.
 - There are four available
   - ROUND_OFF (1)
   - ROUND_UP (2)
   - ROUND_DOWN (3)
   - ROUND_NEAR (4)
 
-- The $Y field of FSQRT, FINT, FIX, FIXU, FLOT, FLOTU, SFLOT, SFLOTU can be used to specify a rounding method. e.g. FIX $X,ROUND_UP,$Z. 
+- The $Y field of FSQRT, FINT, FIX, FIXU, FLOT, FLOTU, SFLOT, SFLOTU can be used to specify a rounding method. e.g. FIX $X,ROUND_UP,$Z.
 
 
 
@@ -360,16 +370,16 @@ INCL $X, YZ; inc low wyde
 
 #+END_SRC
 
-There are also versions of bitwise OR, AND, and ANT not for each of the variants above (high, medium high, medium low and low). 
+There are also versions of bitwise OR, AND, and ANT not for each of the variants above (high, medium high, medium low and low).
 
-With only 4 of these instructions, we can get any desired octabyte into a register without loading anything from memory. 
+With only 4 of these instructions, we can get any desired octabyte into a register without loading anything from memory.
 #+BEGIN_SRC mmix
 SETH $0, #0123;
 INCMH $0, #4567
 INCML $0, #89ab
 INCL $0, #cdef
 #+END_SRC
-Sets $0 to be #0123456789abcdef. 
+Sets $0 to be #0123456789abcdef.
 
 **** Looping and Branching
 
@@ -446,7 +456,7 @@ UNSAVE $Z; restore process state
 - Pop restores the previously pushed registers
 - Save stores all current registers in memory, and put the address of topmost (what the hell does he mean by topmost) stored octabyte into u($X).
 
-- I think he means that you then start instructions from the next octabyte, thus preserving the saved state. 
+- I think he means that you then start instructions from the next octabyte, thus preserving the saved state.
 - Unsave restores this information.
 **** Interrupts
 
@@ -487,8 +497,8 @@ Trip uses five registers:
 - rY Y operand register
 - rZ Z operand register
 
-Trap is similar but uses rBB, rWW, rXX, rYY and rZZ. 
-This can be used for input/output operations. 
+Trap is similar but uses rBB, rWW, rXX, rYY and rZZ.
+This can be used for input/output operations.
 - TRAP 0 can be used to end a program.
 
 ****** Exercises
@@ -497,7 +507,7 @@ This can be used for input/output operations.
 2) a) b, d, f; b) a, c, e (lowercase a is 97 in ASCII)
 3) bots
 4), mega 1000kb, giga 1000mb, tera, 1000gb
-5) If 
+5) If
 9) Yes, unless over/underflow occurs
 10) Div by 2^64-1 will overflow
 11) a) False (because of overlow)
@@ -560,9 +570,9 @@ String BYTE ", world",#a,0
 - Register $1 contains the memory address of the first such argument, which is always the name of the program.
 - All arguments are placed into consequtive octabytes, ending with an octabyte of all zeros.
 - All arguments represented as a string
-- 
+-
 
-He then presents an amazing prime calculation algorithm, which I'm going to implement in python (first, then MMIX). 
+He then presents an amazing prime calculation algorithm, which I'm going to implement in python (first, then MMIX).
 
 #+BEGIN_SRC python :tangle primes.py
 def primes(num):
@@ -596,7 +606,7 @@ def primes(num):
 : None
 
 
-Abandoning Python for now, going to use Knuth's code and then convert. 
+Abandoning Python for now, going to use Knuth's code and then convert.
 
 #+BEGIN_SRC mmix :tangle primes.mms
 L       IS      1025
@@ -661,13 +671,14 @@ Blanks  BYTE     "   ",0
         CMP      t,mm,2*(L/10-1)
         PBNZ    t,3B
         TRAP    0,Halt,0
-        
+
 
 #+END_SRC
 
 
 Can't get this to work, it says that X is not defined for OB,BUF line.
-Google was of no use (perhaps I have found a mistake?). Nope, the mistake was mine. I used letter-0 instead of digit 0. 0B means to move to the previous 0 instruction in the source. 
+Google was of no use (perhaps I have found a mistake?).
+Nope, the mistake was mine. I used letter-0 instead of digit 0. 0B means to move to the previous 0 instruction in the source.
 **** Language Summary
 
 - Symbols a string of letters, digits beginning with a letter. The underscore character is considdred a letter. Unicode symbols may be used for symbols.
@@ -696,12 +707,12 @@ Google was of no use (perhaps I have found a mistake?). Nope, the mistake was mi
 
   - A unary operator followed by a primary
 
-  - Unary opertators are 
+  - Unary opertators are
     - + (does nothing)
 
     - `-` negation, subtracts from zero
 
-    - ~ complemntation, changes all bits to opposite
+    - ~ complementation, changes all bits to opposite
 
     - $ registerisation, convert pure value to a register number
 
@@ -728,11 +739,11 @@ The symbols for RW are as follows:
 | BinaryWrite     | 3 |
 | BinaryReadWrite | 4 |
 ***** Exercises (first set)
-1) 
-    a) Move to the previous occurence of label 4 in the source.
-   b) it would (maybe) 
+1)
+a) Move to the previous occurence of label 4 in the source.
+b) it would (maybe)
 2) Increment this counter each time the line is run
-3) 
+3)
 #+BEGIN_SRC mmix :noweb yes :tangle maxplus.mms
 X0      IS      @
 N       IS      100
@@ -774,7 +785,7 @@ Main    GETA    t,9F
 10) I really don't want to do this
 
 14)
- 
+
 #+BEGIN_SRC mmix :tangle primes_float.mms
 
 L       IS      1025
@@ -840,7 +851,7 @@ Blanks  BYTE     "   ",0
         CMP      t,mm,2*(L/10-1)
         BNZ      t,3B
         TRAP    0,Halt,0
-        
+
 
 #+END_SRC
 
@@ -878,7 +889,7 @@ sqrtn   GREG     0
         FLOT     t,pk
         FREM     r,fn,t
         BZ       r,4B
-7H      FCMP     t,sqrtn,t        
+7H      FCMP     t,sqrtn,t
         PBNP      t,2B
 8H      INCL     kk,2
         JMP      6B
@@ -911,17 +922,17 @@ Blanks  BYTE     "   ",0
         CMP      t,mm,2*(L/10-1)
         PBNZ    t,3B
         TRAP    0,Halt,0
-        
+
 
 #+END_SRC
-The FP version does more compute operations (which makes sense, as I suspect FREM has to dedo the division that was already done above). I wonder if that div can be removed. 
+The FP version does more compute operations (which makes sense, as I suspect FREM has to dedo the division that was already done above). I wonder if that div can be removed.
 Attempting to change the q to $\ sqrt(n)$ results in an infinite loop. However, running C-c (C-c in Emacs) gets us into the debugger, which seems to be pretty sweet. I don't understand what's going on to cause the inf-loop though (yet).
 ***** Second Set
 ****** Exercise 18: Saddle points
 - Assume a 9*8 matrix of 1 byte elements
 - Find a saddle-point if one exists, returning the location
 - Return zero if none
-- Saddle point: greatest value in col, smallest in row. 
+- Saddle point: greatest value in col, smallest in row.
 #+BEGIN_SRC mmix :tangle saddle_point.mms
 row      GREG   0
 col      GREG   0
@@ -934,7 +945,7 @@ Max      LDB    cur,A,
 #+BEGIN_SRC python saddle_point.py
 def saddle_point(matrix):
     for row, col in matrix:
-        
+
 #+END_SRC
 
 #+BEGIN_SRC R :session :results none
@@ -970,44 +981,63 @@ offset   GREG    0
          INCL    y0,1,0
          STBU    y0,n,offset
          INCL    offset,1,0
-         SET     temp1,X,2*(n-1)
-         SET     temp2,X,2*(n-2)
+         SET     temp1,X,2*n-1
+         SET     temp2,X,2*n-2
          SET     x,
-        
+
 #+END_SRC
 
-I need more practice writing MMIX. 
+I need more practice writing MMIX.
 Let's do something I've done many times, fibonnacci
 
 #+BEGIN_SRC mmix :tangle fib.mms
 ,*first, allocate space for the output
 N       IS       10
-ind     GREG       0        
+ind     GREG       0
 first   GREG       0
 second  GREG       1
 fib     GREG       0
 n       GREG       0
         LOC      Data_Segment
-res     WYDE    
-        LOC      res+4*N
-done    GREG     @      
-        LOC      #100  
+res     GREG     0
+done    GREG     @
+        LOC      #100
 Main    SET      fib,0
         SET      n,100
 1H      STT      first,res,ind
-        INCL     ind,1
-        STT      second,res,ind        
+        ADDU     ind,ind,1
+        STT      second,res,ind
         ADD      fib,first,second
-
         SET      first,second
         SET      second,fib
         SUB      n,n,1
         PBNZ      n,1B
-FIB     OCTA      fib,0        
+FIB     OCTA      fib,0
         LDA      $255,FIB
         TRAP     0,Fputs,StdOut
         TRAP     0,Halt,0
 #+END_SRC
+
+
+- So this works (in that it calculates the correct numbers)
+- But I don't seem to be able to store anything
+- Or print anything
+- So I guess its a purely functonal fibonacci
+
+- Let's try to do something simpler
+- Add two precoded numbers and print the output
+
+#+BEGIN_SRC mmix :tangle add.mms
+a       GREG    1
+b       GREG    2
+ind     GREG    0
+Main    ADD     ind,a,b
+        LDOU     $255,ind
+        TRAP    0,Fputs,StdOut
+        TRAP    0,Halt,0
+
+#+END_SRC
+
 
  Excercises 1.31
 
@@ -1015,7 +1045,7 @@ FIB     OCTA      fib,0
 25x = 16x + 9x + x
 25x = 32x - 9x
 #+END_LaTeX
-So, we can express 25x as SR r,x,4; 8ADDU r,x,x for a cost of 2v, as opposed to 10v for multiplication. 
+So, we can express 25x as SR r,x,4; 8ADDU r,x,x for a cost of 2v, as opposed to 10v for multiplication.
 
 
 
@@ -1048,7 +1078,7 @@ get_easter_date <- function(year) {
     return(paste0(N, " ", month))
 }
 #+END_SRC
-This does not yet work. It's funny that I'm writing this code on easter sunday. It's also worth mentioning that this same code appears in Numerical Recipes, where it is really obscure. This presentation is extremely clear, however. 
+This does not yet work. It's funny that I'm writing this code on easter sunday. It's also worth mentioning that this same code appears in Numerical Recipes, where it is really obscure. This presentation is extremely clear, however.
 #+RESULTS:
 *** 1.3 Applications to Permutations
 **** Program A
@@ -1146,12 +1176,12 @@ Succ    ORL     x,#80
         BZ      t,Open
         ADD     j,j,3
         JMP     Open
-        
+
 #+END_SRC
 
 For reference, the syntax for passing arguments to a program in MMIX is as follows
 #+BEGIN_SRC sh
-~/mmix/mmix -fperms.txt -t10 permutations.mmo 
+~/mmix/mmix -fperms.txt -t10 permutations.mmo
 #+END_SRC
 **** TODO Program B
 
@@ -1234,9 +1264,9 @@ Done    BNZ     j,0F
         ADD     j,j,1
         SET     t,0
         SET     $255,base
-        TRAP    0,Fputs,StdOut        
-        
-        
+        TRAP    0,Fputs,StdOut
+
+
 
 #+END_SRC
 Hmmm, I can't get this to work. The X and Y variables have not been defined. We do have small x, which could subsitute except that it is also used in the algorithm. Curiouser and curiouser....
@@ -1315,4 +1345,3 @@ E(C) = 22/6 = 3.67
 | 6 |
 | 2 |
 | 6 |
-
